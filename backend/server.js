@@ -1,7 +1,9 @@
 const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
 const path = require("path");
+
+// Import routes
+const apiRoutes = require('./routes');
 
 const app = express();
 const PORT = 3001;
@@ -9,6 +11,9 @@ const PORT = 3001;
 const allowedOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
 
 // Middleware
+app.use(express.json());
+
+// CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -27,424 +32,56 @@ app.use(
   }),
 );
 
-// Database setup with absolute path
-const dbPath = path.join(__dirname, "assets.db");
-console.log("Database path:", dbPath);
+// Database connection (will be initialized via the database.js module)
+require('./config/database');
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error("Database connection error:", err.message);
-    console.log("Trying to create database in current directory...");
+// Use API routes
+app.use('/api', apiRoutes);
 
-    // Try alternative path
-    const altPath = path.join(process.cwd(), "assets.db");
-    console.log("Trying alternative path:", altPath);
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Route not found",
+    message: `The route ${req.method} ${req.url} does not exist`,
+    availableRoutes: [
+      "GET    /api/health",
+      "GET    /api/test",
+      "GET    /api/assets",
+      "GET    /api/assets/dropdown",
+      "GET    /api/assets/:code",
+      "POST   /api/assets",
+      "POST   /api/assets/:childCode/parents/:parentCode",
+      "DELETE /api/assets/:childCode/parents/:parentCode"
+    ]
+  });
+});
 
-    // Reinitialize with alternative path
-    db = new sqlite3.Database(altPath, (err2) => {
-      if (err2) {
-        console.error("Failed to create database:", err2.message);
-      } else {
-        console.log("Database created successfully at:", altPath);
-        initializeDatabase();
-      }
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  
+  // Handle CORS errors
+  if (err.message.includes('CORS')) {
+    return res.status(403).json({
+      error: "CORS Error",
+      message: err.message,
+      allowedOrigins: allowedOrigins
     });
-  } else {
-    console.log("Connected to SQLite database at:", dbPath);
-    initializeDatabase();
   }
-});
-
-// Initialize database with tables
-function initializeDatabase() {
-  console.log("Initializing database tables...");
-
-  // Create assets table
-  db.run(
-    `
-        CREATE TABLE IF NOT EXISTS assets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            asset_code TEXT UNIQUE NOT NULL,
-            name TEXT NOT NULL,
-            type TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `,
-    (err) => {
-      if (err) {
-        console.error("Error creating assets table:", err.message);
-      } else {
-        console.log("Assets table ready");
-      }
-    },
-  );
-
-  // Create relationships table
-  db.run(
-    `
-        CREATE TABLE IF NOT EXISTS asset_relationships (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            parent_asset_code TEXT NOT NULL,
-            child_asset_code TEXT NOT NULL,
-            FOREIGN KEY (parent_asset_code) REFERENCES assets(asset_code),
-            FOREIGN KEY (child_asset_code) REFERENCES assets(asset_code),
-            UNIQUE(parent_asset_code, child_asset_code)
-        )
-    `,
-    (err) => {
-      if (err) {
-        console.error("Error creating relationships table:", err.message);
-      } else {
-        console.log("Relationships table ready");
-
-        // Insert sample data if database is empty
-        insertSampleData();
-      }
-    },
-  );
-}
-
-// Add this before the other routes (around line 130)
-app.get("/api/test", (req, res) => {
-  res.json({
-    message: "Backend is working!",
-    timestamp: new Date().toISOString(),
-    endpoints: [
-      "/api/assets",
-      "/api/assets/:code",
-      "/api/assets/dropdown",
-      "/api/health",
-    ],
+  
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: process.env.NODE_ENV === 'development' ? err.message : "Something went wrong"
   });
-});
-
-// Insert sample data for testing
-function insertSampleData() {
-  // Check if we already have data
-  db.get("SELECT COUNT(*) as count FROM assets", (err, result) => {
-    if (err) {
-      console.error("Error checking data:", err.message);
-      return;
-    }
-
-    if (result.count === 0) {
-      console.log("Inserting sample data...");
-
-      const sampleAssets = [
-        ["KHO123", "Dell Laptop", "laptop"],
-        ["KHO573", "HP Printer", "printer"],
-        ["KHOWD111", "Windows 11 Pro License", "license"],
-        ["KHO789", "Samsung Monitor", "monitor"],
-        ["KHO456", "Office Chair", "furniture"],
-      ];
-
-      let insertedCount = 0;
-      sampleAssets.forEach(([code, name, type]) => {
-        db.run(
-          "INSERT OR IGNORE INTO assets (asset_code, name, type) VALUES (?, ?, ?)",
-          [code, name, type],
-          function (err) {
-            if (err) {
-              console.error(`Error inserting ${code}:`, err.message);
-            } else {
-              insertedCount++;
-              console.log(`Inserted sample asset: ${code} - ${name}`);
-            }
-
-            // After all assets inserted, add relationships
-            if (insertedCount === sampleAssets.length) {
-              addSampleRelationships();
-            }
-          },
-        );
-      });
-    } else {
-      console.log(`Database already has ${result.count} assets`);
-    }
-  });
-}
-
-// Add sample relationships
-function addSampleRelationships() {
-  console.log("Adding sample relationships...");
-
-  // Make KHO123 (laptop) parent of KHOWD111 (license)
-  db.run(
-    "INSERT OR IGNORE INTO asset_relationships (parent_asset_code, child_asset_code) VALUES (?, ?)",
-    ["KHO123", "KHOWD111"],
-    (err) => {
-      if (err) {
-        console.error("Error adding relationship:", err.message);
-      } else {
-        console.log("Added relationship: KHO123 -> KHOWD111");
-      }
-    },
-  );
-}
-
-// API Routes
-
-// Get all assets
-app.get("/api/assets", (req, res) => {
-  db.all("SELECT * FROM assets ORDER BY created_at DESC", (err, rows) => {
-    if (err) {
-      console.error("Error fetching assets:", err.message);
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    console.log(`Fetched ${rows.length} assets`);
-    res.json(rows);
-  });
-});
-
-// Get a single asset with its children
-app.get("/api/assets/:code", (req, res) => {
-  const assetCode = req.params.code;
-  console.log(`Fetching details for asset: ${assetCode}`);
-
-  // Get asset details
-  db.get(
-    "SELECT * FROM assets WHERE asset_code = ?",
-    [assetCode],
-    (err, asset) => {
-      if (err) {
-        console.error("Error fetching asset:", err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-
-      if (!asset) {
-        console.log(`Asset not found: ${assetCode}`);
-        res.status(404).json({ error: "Asset not found" });
-        return;
-      }
-
-      console.log(`Found asset: ${asset.asset_code} - ${asset.name}`);
-
-      // Get child assets
-      db.all(
-        `
-            SELECT a.* 
-            FROM assets a
-            JOIN asset_relationships r ON a.asset_code = r.child_asset_code
-            WHERE r.parent_asset_code = ?
-        `,
-        [assetCode],
-        (err, children) => {
-          if (err) {
-            console.error("Error fetching children:", err.message);
-            res.status(500).json({ error: err.message });
-            return;
-          }
-
-          console.log(`Found ${children.length} child assets`);
-
-          // Get parent assets
-          db.all(
-            `
-                SELECT a.* 
-                FROM assets a
-                JOIN asset_relationships r ON a.asset_code = r.parent_asset_code
-                WHERE r.child_asset_code = ?
-            `,
-            [assetCode],
-            (err, parents) => {
-              if (err) {
-                console.error("Error fetching parents:", err.message);
-                res.status(500).json({ error: err.message });
-                return;
-              }
-
-              console.log(`Found ${parents.length} parent assets`);
-
-              res.json({
-                ...asset,
-                children,
-                parents,
-              });
-            },
-          );
-        },
-      );
-    },
-  );
-});
-
-// Create a new asset
-app.post("/api/assets", (req, res) => {
-  const { asset_code, name, type } = req.body;
-  console.log(`Creating new asset: ${asset_code} - ${name} (${type})`);
-
-  if (!asset_code || !name || !type) {
-    res.status(400).json({ error: "Missing required fields" });
-    return;
-  }
-
-  db.run(
-    "INSERT INTO assets (asset_code, name, type) VALUES (?, ?, ?)",
-    [asset_code.toUpperCase(), name, type],
-    function (err) {
-      if (err) {
-        console.error("Error creating asset:", err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      console.log(`Asset created with ID: ${this.lastID}`);
-      res.json({
-        id: this.lastID,
-        asset_code: asset_code.toUpperCase(),
-        name,
-        type,
-      });
-    },
-  );
-});
-
-// Add parent-child relationship - UPDATED VERSION
-app.post("/api/assets/:childCode/parents/:parentCode", (req, res) => {
-  const { childCode, parentCode } = req.params;
-  console.log(`Adding relationship: ${parentCode} -> ${childCode}`);
-
-  // First, check if both assets exist
-  db.get(
-    "SELECT asset_code FROM assets WHERE asset_code = ?",
-    [childCode.toUpperCase()],
-    (err, child) => {
-      if (err) {
-        console.error("Error checking child asset:", err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-
-      if (!child) {
-        res.status(404).json({ error: `Child asset ${childCode} not found` });
-        return;
-      }
-
-      db.get(
-        "SELECT asset_code FROM assets WHERE asset_code = ?",
-        [parentCode.toUpperCase()],
-        (err, parent) => {
-          if (err) {
-            console.error("Error checking parent asset:", err.message);
-            res.status(500).json({ error: err.message });
-            return;
-          }
-
-          if (!parent) {
-            res
-              .status(404)
-              .json({ error: `Parent asset ${parentCode} not found` });
-            return;
-          }
-
-          // Check for circular relationship (don't allow parent to be child of its child)
-          if (childCode === parentCode) {
-            res
-              .status(400)
-              .json({ error: "An asset cannot be a parent of itself" });
-            return;
-          }
-
-          // Check if relationship already exists
-          db.get(
-            "SELECT id FROM asset_relationships WHERE parent_asset_code = ? AND child_asset_code = ?",
-            [parentCode.toUpperCase(), childCode.toUpperCase()],
-            (err, existing) => {
-              if (err) {
-                console.error(
-                  "Error checking existing relationship:",
-                  err.message,
-                );
-                res.status(500).json({ error: err.message });
-                return;
-              }
-
-              if (existing) {
-                res.status(400).json({ error: "Relationship already exists" });
-                return;
-              }
-
-              // Insert the relationship
-              db.run(
-                "INSERT INTO asset_relationships (parent_asset_code, child_asset_code) VALUES (?, ?)",
-                [parentCode.toUpperCase(), childCode.toUpperCase()],
-                function (err) {
-                  if (err) {
-                    console.error("Error adding relationship:", err.message);
-                    res.status(500).json({ error: err.message });
-                    return;
-                  }
-                  console.log(
-                    `Relationship added: ${parentCode} -> ${childCode}`,
-                  );
-                  res.json({
-                    message: "Relationship added successfully",
-                    parent: parentCode,
-                    child: childCode,
-                    id: this.lastID,
-                  });
-                },
-              );
-            },
-          );
-        },
-      );
-    },
-  );
-});
-
-// Remove parent-child relationship
-app.delete("/api/assets/:childCode/parents/:parentCode", (req, res) => {
-  const { childCode, parentCode } = req.params;
-  console.log(`Removing relationship: ${parentCode} -> ${childCode}`);
-
-  db.run(
-    "DELETE FROM asset_relationships WHERE parent_asset_code = ? AND child_asset_code = ?",
-    [parentCode.toUpperCase(), childCode.toUpperCase()],
-    function (err) {
-      if (err) {
-        console.error("Error removing relationship:", err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      console.log(`Relationship removed: ${parentCode} -> ${childCode}`);
-      res.json({
-        message: "Relationship removed successfully",
-        parent: parentCode,
-        child: childCode,
-      });
-    },
-  );
-});
-
-// Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "OK",
-    message: "Asset Management API is running",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// Get all assets for dropdown (simplified version)
-app.get("/api/assets/dropdown", (req, res) => {
-  db.all(
-    "SELECT asset_code, name, type FROM assets ORDER BY asset_code",
-    (err, rows) => {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json(rows);
-    },
-  );
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log(`✅ Backend server running on http://localhost:${PORT}`);
-  console.log(`📊 Database location: ${dbPath}`);
+  console.log(`📊 Database location: ${path.join(__dirname, 'assets.db')}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`📋 Assets endpoint: http://localhost:${PORT}/api/assets`);
+  console.log(`📋 Main endpoints:`);
+  console.log(`   GET    http://localhost:${PORT}/api/assets`);
+  console.log(`   POST   http://localhost:${PORT}/api/assets`);
+  console.log(`   GET    http://localhost:${PORT}/api/assets/KHO123`);
 });

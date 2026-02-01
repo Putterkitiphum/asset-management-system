@@ -114,33 +114,6 @@ function HomePage() {
             ))}
           </div>
         </div>
-
-        {/* Instructions */}
-        <div className="section instructions">
-          <h2>How It Works</h2>
-          <ol>
-            <li>
-              <strong>Create Assets:</strong> Enter asset code (like KHO123),
-              name, and type
-            </li>
-            <li>
-              <strong>View Details:</strong> Click on any asset card to see
-              detailed view
-            </li>
-            <li>
-              <strong>Add Relationships:</strong> In detail page, add parent
-              assets
-            </li>
-            <li>
-              <strong>Example:</strong> Create KHO123 (laptop) and KHOWD111
-              (license). Then in KHOWD111 detail page, add KHO123 as parent
-            </li>
-          </ol>
-          <p className="note">
-            Note: Each asset must have a unique asset code. An asset can have
-            multiple parents.
-          </p>
-        </div>
       </div>
     </div>
   );

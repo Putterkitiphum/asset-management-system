@@ -16,21 +16,14 @@ function AssetDetail() {
     fetchAllAssets();
   }, []);
 
-  // Fetch asset details
-  useEffect(() => {
-    if (assetCode) {
-      fetchAssetDetails();
-    }
-  }, [assetCode]);
-
   const fetchAllAssets = async () => {
     try {
       console.log("Fetching assets from:", `${backendUrl}/api/assets/dropdown`);
       const response = await axios.get(`${backendUrl}/api/assets/dropdown`, {
         timeout: 5000,
         headers: {
-          'Accept': 'application/json'
-        }
+          Accept: "application/json",
+        },
       });
       console.log("Assets loaded:", response.data);
       setAllAssets(response.data);
@@ -38,31 +31,43 @@ function AssetDetail() {
     } catch (error) {
       console.error("Error fetching all assets:", error);
       setError(`Failed to load assets list: ${error.message}`);
-      
+
       // Try alternative endpoint
       try {
         console.log("Trying alternative endpoint...");
         const altResponse = await axios.get(`${backendUrl}/api/assets`, {
-          timeout: 3000
+          timeout: 3000,
         });
         console.log("Alternative endpoint worked, using that data");
         setAllAssets(altResponse.data);
         setError("");
       } catch (altError) {
         console.error("Alternative endpoint also failed:", altError);
-        setError(`Cannot connect to backend. Make sure it's running on ${backendUrl}`);
+        setError(
+          `Cannot connect to backend. Make sure it's running on ${backendUrl}`,
+        );
       }
     }
   };
+
+  // Fetch asset details
+  useEffect(() => {
+    if (assetCode) {
+      fetchAssetDetails();
+    }
+  }, [assetCode]);
 
   const fetchAssetDetails = async () => {
     try {
       setLoading(true);
       setError("");
       console.log("Fetching asset details for:", assetCode);
-      const response = await axios.get(`${backendUrl}/api/assets/${assetCode}`, {
-        timeout: 5000
-      });
+      const response = await axios.get(
+        `${backendUrl}/api/assets/${assetCode}`,
+        {
+          timeout: 5000,
+        },
+      );
       console.log("Asset details loaded:", response.data);
       setAsset(response.data);
     } catch (error) {
@@ -89,33 +94,30 @@ function AssetDetail() {
       const response = await axios.post(
         `${backendUrl}/api/assets/${assetCode}/parents/${selectedParent}`,
         {},
-        { 
+        {
           timeout: 5000,
           headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+            "Content-Type": "application/json",
+          },
+        },
       );
-      
+
       console.log("Parent added successfully:", response.data);
-      
+
       // Refresh asset details and assets list
-      await Promise.all([
-        fetchAssetDetails(),
-        fetchAllAssets()
-      ]);
-      
+      await Promise.all([fetchAssetDetails(), fetchAllAssets()]);
+
       // Clear selection
       setSelectedParent("");
-      
+
       // Show success message
       alert(`Successfully added ${selectedParent} as parent of ${assetCode}`);
     } catch (error) {
       console.error("Error adding parent:", error);
-      
+
       if (error.response?.data?.error) {
         setError(`Error: ${error.response.data.error}`);
-      } else if (error.code === 'ECONNABORTED') {
+      } else if (error.code === "ECONNABORTED") {
         setError("Request timed out. Please try again.");
       } else if (error.message === "Network Error") {
         setError(`Cannot connect to backend at ${backendUrl}`);
@@ -126,23 +128,30 @@ function AssetDetail() {
   };
 
   const handleRemoveParent = async (parentCode) => {
-    if (!window.confirm(`Are you sure you want to remove ${parentCode} as parent?`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to remove ${parentCode} as parent?`,
+      )
+    ) {
       return;
     }
 
     try {
       setError("");
-      await axios.delete(`${backendUrl}/api/assets/${assetCode}/parents/${parentCode}`, {
-        timeout: 5000
-      });
-      
+      await axios.delete(
+        `${backendUrl}/api/assets/${assetCode}/parents/${parentCode}`,
+        {
+          timeout: 5000,
+        },
+      );
+
       // Refresh asset details
       fetchAssetDetails();
-      
+
       alert(`Successfully removed ${parentCode} as parent`);
     } catch (error) {
       console.error("Error removing parent:", error);
-      
+
       if (error.response?.data?.error) {
         setError(error.response.data.error);
       } else {
@@ -164,7 +173,10 @@ function AssetDetail() {
       <div className="loading">
         <h2>Loading asset details...</h2>
         <div className="spinner"></div>
-        <button onClick={() => setLoading(false)} className="btn btn-secondary mt-2">
+        <button
+          onClick={() => setLoading(false)}
+          className="btn btn-secondary mt-2"
+        >
           Cancel Loading
         </button>
       </div>
@@ -204,16 +216,22 @@ function AssetDetail() {
             <strong>Connection Error:</strong> {error}
             <div className="error-help mt-2">
               <small>
-                Backend URL: {backendUrl}<br />
+                Backend URL: {backendUrl}
+                <br />
                 Check if backend is running on port 3001
               </small>
             </div>
           </div>
           <div className="error-actions">
-            <button onClick={retryConnection} className="btn btn-primary btn-small">
+            <button
+              onClick={retryConnection}
+              className="btn btn-primary btn-small"
+            >
               Retry
             </button>
-            <button onClick={() => setError("")} className="btn-close">×</button>
+            <button onClick={() => setError("")} className="btn-close">
+              ×
+            </button>
           </div>
         </div>
       )}
@@ -226,8 +244,8 @@ function AssetDetail() {
               <span className="asset-type-badge">{asset.type}</span>
             </div>
             <div className="asset-actions">
-              <button 
-                onClick={retryConnection} 
+              <button
+                onClick={retryConnection}
                 className="btn btn-outline btn-small"
                 title="Refresh data"
               >
@@ -239,7 +257,9 @@ function AssetDetail() {
           <div className="detail-content">
             <h3>{asset.name}</h3>
             <p className="created-date">
-              <strong>Created:</strong> {new Date(asset.created_at).toLocaleDateString()} at {new Date(asset.created_at).toLocaleTimeString()}
+              <strong>Created:</strong>{" "}
+              {new Date(asset.created_at).toLocaleDateString()} at{" "}
+              {new Date(asset.created_at).toLocaleTimeString()}
             </p>
           </div>
 
@@ -247,7 +267,9 @@ function AssetDetail() {
           <div className="relationship-section">
             <div className="section-header">
               <h4>📂 Parent Assets ({asset.parents.length})</h4>
-              <span className="section-help">Assets that contain this asset</span>
+              <span className="section-help">
+                Assets that contain this asset
+              </span>
             </div>
             {asset.parents.length > 0 ? (
               <div className="relationship-list">
@@ -276,7 +298,9 @@ function AssetDetail() {
             ) : (
               <div className="empty-state">
                 <p className="no-data">No parent assets</p>
-                <p className="empty-help">This asset is not contained within any other assets.</p>
+                <p className="empty-help">
+                  This asset is not contained within any other assets.
+                </p>
               </div>
             )}
           </div>
@@ -285,9 +309,11 @@ function AssetDetail() {
           <div className="add-parent-section">
             <div className="section-header">
               <h4>➕ Add Parent Asset</h4>
-              <span className="section-help">Select an asset to become the parent of this asset</span>
+              <span className="section-help">
+                Select an asset to become the parent of this asset
+              </span>
             </div>
-            
+
             <div className="add-parent-form">
               <select
                 value={selectedParent}
@@ -299,24 +325,30 @@ function AssetDetail() {
                 disabled={allAssets.length === 0}
               >
                 <option value="">
-                  {allAssets.length === 0 ? "Loading assets..." : "-- Select a parent asset --"}
+                  {allAssets.length === 0
+                    ? "Loading assets..."
+                    : "-- Select a parent asset --"}
                 </option>
-                {allAssets.length > 0 && allAssets
-                  .filter(
-                    (a) =>
-                      a.asset_code !== asset.asset_code &&
-                      !asset.parents.some((p) => p.asset_code === a.asset_code)
-                  )
-                  .map((assetOption) => (
-                    <option 
-                      key={assetOption.asset_code} 
-                      value={assetOption.asset_code}
-                    >
-                      {assetOption.asset_code} - {assetOption.name} ({assetOption.type})
-                    </option>
-                  ))}
+                {allAssets.length > 0 &&
+                  allAssets
+                    .filter(
+                      (a) =>
+                        a.asset_code !== asset.asset_code &&
+                        !asset.parents.some(
+                          (p) => p.asset_code === a.asset_code,
+                        ),
+                    )
+                    .map((assetOption) => (
+                      <option
+                        key={assetOption.asset_code}
+                        value={assetOption.asset_code}
+                      >
+                        {assetOption.asset_code} - {assetOption.name} (
+                        {assetOption.type})
+                      </option>
+                    ))}
               </select>
-              
+
               <button
                 onClick={handleAddParent}
                 disabled={!selectedParent || allAssets.length === 0}
@@ -325,12 +357,12 @@ function AssetDetail() {
                 Add Parent
               </button>
             </div>
-            
+
             {selectedParent && allAssets.length > 0 && (
               <div className="selected-info">
-                <strong>Selected:</strong> {selectedParent} - {
-                  allAssets.find(a => a.asset_code === selectedParent)?.name || "Unknown asset"
-                }
+                <strong>Selected:</strong> {selectedParent} -{" "}
+                {allAssets.find((a) => a.asset_code === selectedParent)?.name ||
+                  "Unknown asset"}
               </div>
             )}
 
@@ -346,7 +378,9 @@ function AssetDetail() {
           <div className="relationship-section">
             <div className="section-header">
               <h4>📦 Child Assets ({asset.children.length})</h4>
-              <span className="section-help">Assets contained within this asset</span>
+              <span className="section-help">
+                Assets contained within this asset
+              </span>
             </div>
             {asset.children.length > 0 ? (
               <div className="relationship-list">
@@ -368,7 +402,9 @@ function AssetDetail() {
             ) : (
               <div className="empty-state">
                 <p className="no-data">No child assets</p>
-                <p className="empty-help">This asset does not contain any other assets.</p>
+                <p className="empty-help">
+                  This asset does not contain any other assets.
+                </p>
               </div>
             )}
           </div>
