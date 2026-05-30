@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -6,7 +7,7 @@ const path = require("path");
 const apiRoutes = require('./routes');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 const allowedOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
 

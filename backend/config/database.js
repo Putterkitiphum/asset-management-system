@@ -1,5 +1,6 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
+const bcrypt = require("bcryptjs");
 
 const dbPath = path.join(__dirname, "..", "assets.db");
 
@@ -35,6 +36,27 @@ function initializeDatabase() {
         console.log("Assets table ready");
       }
     },
+  );
+
+  // Create users table
+  db.run(
+    `
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'admin',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `,
+    (err) => {
+      if (err) {
+        console.error("Error creating users table:", err.message);
+      } else {
+        console.log("Users table ready");
+        seedAdminUser();
+      }
+    }
   );
 
   // Create relationships table
@@ -126,4 +148,36 @@ function addSampleRelationships() {
   );
 }
 
-module.exports = db;
+// Seed the default admin account on first run
+async function seedAdminUser() {
+  db.get("SELECT id FROM users WHERE username = ?", ["admin"], async (err, row) => {
+    if (err || row) return;
+    const hash = await bcrypt.hash("admin123", 10);
+    db.run(
+      "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+      ["admin", hash, "admin"],
+      (err) => {
+        if (!err) console.log("✅ Admin account created — username: admin / password: admin123");
+      }
+    );
+  });
+}
+
+const dbGet = (sql, params = []) =>
+  new Promise((resolve, reject) =>
+    db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)))
+  );
+
+const dbAll = (sql, params = []) =>
+  new Promise((resolve, reject) =>
+    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)))
+  );
+
+const dbRun = (sql, params = []) =>
+  new Promise((resolve, reject) =>
+    db.run(sql, params, function (err) {
+      err ? reject(err) : resolve({ lastID: this.lastID, changes: this.changes });
+    })
+  );
+
+module.exports = { db, dbGet, dbAll, dbRun };

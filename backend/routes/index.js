@@ -1,10 +1,12 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const assetRoutes = require('./assetRoutes');
-const relationshipRoutes = require('./relationshipRoutes');
+const assetRoutes = require("./assetRoutes");
+const relationshipRoutes = require("./relationshipRoutes");
+const authRoutes = require("./authRoutes");
+const { authenticate } = require("../middleware/auth");
 
-// Health check endpoint
-router.get('/health', (req, res) => {
+// Public — no token needed
+router.get("/health", (req, res) => {
   res.json({
     status: "OK",
     message: "Asset Management API is running",
@@ -12,22 +14,10 @@ router.get('/health', (req, res) => {
   });
 });
 
-// Test endpoint
-router.get('/test', (req, res) => {
-  res.json({
-    message: "Backend is working!",
-    timestamp: new Date().toISOString(),
-    endpoints: [
-      "/api/assets",
-      "/api/assets/:code",
-      "/api/assets/dropdown",
-      "/api/health",
-    ],
-  });
-});
+router.use("/auth", authRoutes);
 
-// Mount the routes
-router.use('/assets', assetRoutes);
-router.use('/assets', relationshipRoutes); // Mount relationship routes under /api/assets
+// Protected — all asset routes require a valid JWT
+router.use("/assets", authenticate, assetRoutes);
+router.use("/assets", authenticate, relationshipRoutes);
 
 module.exports = router;

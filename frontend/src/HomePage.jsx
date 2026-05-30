@@ -1,18 +1,36 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import { useAuth } from "./AuthContext";
 
 function HomePage() {
+  const { user, logout } = useAuth();
   const [assets, setAssets] = useState([]);
   const [newAsset, setNewAsset] = useState({
     asset_code: "",
     name: "",
     type: "laptop",
   });
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     fetchAssets();
   }, []);
+
+  const exportToExcel = () => {
+    const rows = assets.map((a) => ({
+      "Asset Code": a.asset_code,
+      "Name": a.name,
+      "Type": a.type,
+      "Created At": new Date(a.created_at).toLocaleString(),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Assets");
+    XLSX.writeFile(wb, "assets.xlsx");
+  };
 
   const fetchAssets = async () => {
     try {
@@ -29,20 +47,48 @@ function HomePage() {
       await axios.post("/api/assets", newAsset);
       setNewAsset({ asset_code: "", name: "", type: "laptop" });
       fetchAssets();
-      alert("Asset created successfully!");
+      setErrorMsg("");
+      setSuccessMsg("Asset created successfully!");
     } catch (error) {
       console.error("Error creating asset:", error);
-      alert("Error creating asset. Asset code might already exist.");
+      const msg =
+        error.response?.data?.error || "Asset code might already exist.";
+      setSuccessMsg("");
+      setErrorMsg(`Error creating asset: ${msg}`);
     }
   };
 
   return (
     <div className="home-page">
       <header className="app-header">
-        <h1>📦 Asset Management System</h1>
-        <p>Track assets with parent-child relationships</p>
+        <div className="header-main">
+          <h1>📦 Asset Management System</h1>
+          <p>Track assets with parent-child relationships</p>
+        </div>
+        <div className="header-actions">
+          <span className="header-user">👤 {user?.username}</span>
+          <button onClick={logout} className="btn btn-secondary btn-small">
+            Logout
+          </button>
+        </div>
       </header>
       <div className="container">
+        {successMsg && (
+          <div className="success-alert">
+            <div className="success-content">{successMsg}</div>
+            <button onClick={() => setSuccessMsg("")} className="btn-close">
+              ×
+            </button>
+          </div>
+        )}
+        {errorMsg && (
+          <div className="error-alert">
+            <div className="error-content">{errorMsg}</div>
+            <button onClick={() => setErrorMsg("")} className="btn-close">
+              ×
+            </button>
+          </div>
+        )}
         {/* Create Asset Form */}
         <div className="section">
           <h2>Create New Asset</h2>
@@ -98,7 +144,16 @@ function HomePage() {
 
         {/* Asset List */}
         <div className="section">
-          <h2>All Assets ({assets.length})</h2>
+          <div className="section-title-row">
+            <h2>All Assets ({assets.length})</h2>
+            <button
+              onClick={exportToExcel}
+              disabled={assets.length === 0}
+              className="btn btn-outline"
+            >
+              Export to Excel
+            </button>
+          </div>
           <div className="asset-list">
             {assets.map((asset) => (
               <Link

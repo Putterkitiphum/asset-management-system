@@ -4,6 +4,82 @@
   padding: var(--spacing-xl);
 }
 
+/* ── Login page ─────────────────────────────────────── */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+}
+
+.login-card {
+  background: var(--white);
+  padding: var(--spacing-xxl);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-card h1 {
+  text-align: center;
+  color: var(--primary-color);
+  font-size: 1.8rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.login-card h2 {
+  text-align: center;
+  color: var(--gray-700);
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-bottom: var(--spacing-xl);
+}
+
+.login-btn {
+  width: 100%;
+  padding: var(--spacing-md);
+  font-size: 1rem;
+  margin-top: var(--spacing-sm);
+}
+
+/* ── Header user / logout ───────────────────────────── */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.header-main {
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.header-user {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+}
+
+.detail-header-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.detail-header-bar h1 {
+  flex: 1;
+}
+
 /* Header styles */
 .app-header {
   text-align: center;
@@ -42,6 +118,17 @@
   padding: var(--spacing-xl);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-xl);
+}
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-title-row h2 {
+  margin-bottom: 0;
 }
 
 .section h2 {
@@ -499,7 +586,30 @@
   }
 }
 
-/* Error and alert styles */
+/* Success and error alert styles */
+.success-alert {
+  background-color: #d4edda;
+  color: #155724;
+  padding: var(--spacing-md);
+  border: 1px solid #c3e6cb;
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.success-alert .btn-close {
+  color: #155724;
+}
+
+.confirm-remove {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+}
+
 .error-alert {
   background-color: #f8d7da;
   color: #721c24;

@@ -1,138 +1,69 @@
-const db = require('../config/database');
+const { dbGet, dbAll, dbRun } = require('../config/database');
 
-// Get all assets
-const getAllAssets = (req, res) => {
-  db.all("SELECT * FROM assets ORDER BY created_at DESC", (err, rows) => {
-    if (err) {
-      console.error("Error fetching assets:", err.message);
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    console.log(`Fetched ${rows.length} assets`);
+const getAllAssets = async (req, res) => {
+  try {
+    const rows = await dbAll("SELECT * FROM assets ORDER BY created_at DESC");
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-// Get a single asset with its children and parents
-const getAssetByCode = (req, res) => {
+const getAssetByCode = async (req, res) => {
   const assetCode = req.params.code;
-  console.log(`Fetching details for asset: ${assetCode}`);
+  try {
+    const asset = await dbGet("SELECT * FROM assets WHERE asset_code = ?", [assetCode]);
+    if (!asset) return res.status(404).json({ error: "Asset not found" });
 
-  // Get asset details
-  db.get(
-    "SELECT * FROM assets WHERE asset_code = ?",
-    [assetCode],
-    (err, asset) => {
-      if (err) {
-        console.error("Error fetching asset:", err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
+    const [children, parents] = await Promise.all([
+      dbAll(
+        `SELECT a.* FROM assets a
+         JOIN asset_relationships r ON a.asset_code = r.child_asset_code
+         WHERE r.parent_asset_code = ?`,
+        [assetCode]
+      ),
+      dbAll(
+        `SELECT a.* FROM assets a
+         JOIN asset_relationships r ON a.asset_code = r.parent_asset_code
+         WHERE r.child_asset_code = ?`,
+        [assetCode]
+      ),
+    ]);
 
-      if (!asset) {
-        console.log(`Asset not found: ${assetCode}`);
-        res.status(404).json({ error: "Asset not found" });
-        return;
-      }
-
-      console.log(`Found asset: ${asset.asset_code} - ${asset.name}`);
-
-      // Get child assets
-      db.all(
-        `
-            SELECT a.* 
-            FROM assets a
-            JOIN asset_relationships r ON a.asset_code = r.child_asset_code
-            WHERE r.parent_asset_code = ?
-        `,
-        [assetCode],
-        (err, children) => {
-          if (err) {
-            console.error("Error fetching children:", err.message);
-            res.status(500).json({ error: err.message });
-            return;
-          }
-
-          console.log(`Found ${children.length} child assets`);
-
-          // Get parent assets
-          db.all(
-            `
-                SELECT a.* 
-                FROM assets a
-                JOIN asset_relationships r ON a.asset_code = r.parent_asset_code
-                WHERE r.child_asset_code = ?
-            `,
-            [assetCode],
-            (err, parents) => {
-              if (err) {
-                console.error("Error fetching parents:", err.message);
-                res.status(500).json({ error: err.message });
-                return;
-              }
-
-              console.log(`Found ${parents.length} parent assets`);
-
-              res.json({
-                ...asset,
-                children,
-                parents,
-              });
-            },
-          );
-        },
-      );
-    },
-  );
+    res.json({ ...asset, children, parents });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-// Create a new asset
-const createAsset = (req, res) => {
+const createAsset = async (req, res) => {
   const { asset_code, name, type } = req.body;
-  console.log(`Creating new asset: ${asset_code} - ${name} (${type})`);
 
   if (!asset_code || !name || !type) {
-    res.status(400).json({ error: "Missing required fields" });
-    return;
+    return res.status(400).json({ error: "Missing required fields" });
   }
 
-  db.run(
-    "INSERT INTO assets (asset_code, name, type) VALUES (?, ?, ?)",
-    [asset_code.toUpperCase(), name, type],
-    function (err) {
-      if (err) {
-        console.error("Error creating asset:", err.message);
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      console.log(`Asset created with ID: ${this.lastID}`);
-      res.json({
-        id: this.lastID,
-        asset_code: asset_code.toUpperCase(),
-        name,
-        type,
-      });
-    },
-  );
+  try {
+    const { lastID } = await dbRun(
+      "INSERT INTO assets (asset_code, name, type) VALUES (?, ?, ?)",
+      [asset_code.toUpperCase(), name, type]
+    );
+    res.json({ id: lastID, asset_code: asset_code.toUpperCase(), name, type });
+  } catch (err) {
+    if (err.message.includes("UNIQUE constraint failed")) {
+      return res.status(409).json({ error: "Asset code already exists" });
+    }
+    res.status(500).json({ error: err.message });
+  }
 };
 
-// Get assets for dropdown
-const getAssetsForDropdown = (req, res) => {
-  db.all(
-    "SELECT asset_code, name, type FROM assets ORDER BY asset_code",
-    (err, rows) => {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json(rows);
-    },
-  );
+const getAssetsForDropdown = async (req, res) => {
+  try {
+    const rows = await dbAll("SELECT asset_code, name, type FROM assets ORDER BY asset_code");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-module.exports = {
-  getAllAssets,
-  getAssetByCode,
-  createAsset,
-  getAssetsForDropdown,
-};
+module.exports = { getAllAssets, getAssetByCode, createAsset, getAssetsForDropdown };
