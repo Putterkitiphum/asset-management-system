@@ -11,6 +11,8 @@ function HomePage() {
     asset_code: "",
     name: "",
     type: "laptop",
+    assigned_to: "",
+    location: "",
   });
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -45,7 +47,7 @@ function HomePage() {
     e.preventDefault();
     try {
       await axios.post("/api/assets", newAsset);
-      setNewAsset({ asset_code: "", name: "", type: "laptop" });
+      setNewAsset({ asset_code: "", name: "", type: "laptop", assigned_to: "", location: "" });
       fetchAssets();
       setErrorMsg("");
       setSuccessMsg("Asset created successfully!");
@@ -138,6 +140,32 @@ function HomePage() {
               </select>
             </div>
 
+            <div className="form-field form-field-grow">
+              <label>Assigned To</label>
+              <input
+                type="text"
+                value={newAsset.assigned_to}
+                onChange={(e) =>
+                  setNewAsset({ ...newAsset, assigned_to: e.target.value })
+                }
+                placeholder="e.g., John Doe"
+                required
+              />
+            </div>
+
+            <div className="form-field form-field-grow">
+              <label>Location</label>
+              <input
+                type="text"
+                value={newAsset.location}
+                onChange={(e) =>
+                  setNewAsset({ ...newAsset, location: e.target.value })
+                }
+                placeholder="e.g., Office 3B"
+                required
+              />
+            </div>
+
             <div className="form-field form-field-submit">
               <label>&nbsp;</label>
               <button type="submit" className="btn btn-primary">
@@ -163,8 +191,10 @@ function HomePage() {
             <thead>
               <tr>
                 <th>Asset Code</th>
-                <th>Name</th>
+                <th>Asset Name</th>
                 <th>Type</th>
+                <th>Assigned To</th>
+                <th>Location</th>
                 <th>Created At</th>
                 <th></th>
               </tr>
@@ -172,19 +202,21 @@ function HomePage() {
             <tbody>
               {assets.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="table-empty">No assets found</td>
+                  <td colSpan={7} className="table-empty">No assets found</td>
                 </tr>
               ) : (
                 assets.map((asset) => (
                   <tr key={asset.id}>
-                    <td className="col-code">{asset.asset_code}</td>
+                    <td className="col-code">
+                      <Link to={`/asset/${asset.asset_code}`} className="col-code-link">{asset.asset_code}</Link>
+                    </td>
                     <td>{asset.name}</td>
                     <td><span className="asset-type">{asset.type}</span></td>
+                    <td className="col-muted">{asset.assigned_to || <span className="col-empty">—</span>}</td>
+                    <td className="col-muted">{asset.location || <span className="col-empty">—</span>}</td>
                     <td className="col-date">{new Date(asset.created_at).toLocaleString()}</td>
-                    <td className="col-action">
-                      <Link to={`/asset/${asset.asset_code}`} className="btn btn-outline btn-small">
-                        View →
-                      </Link>
+                    <td className="col-actions">
+                      <Link to={`/asset/${asset.asset_code}`} className="btn btn-outline btn-small">View</Link>
                     </td>
                   </tr>
                 ))

@@ -37,22 +37,77 @@ const getAssetByCode = async (req, res) => {
 };
 
 const createAsset = async (req, res) => {
-  const { asset_code, name, type } = req.body;
+  const { asset_code, name, type, assigned_to, location, comments } = req.body;
 
-  if (!asset_code || !name || !type) {
-    return res.status(400).json({ error: "Missing required fields" });
+  if (!asset_code || !name || !type || !assigned_to || !location) {
+    return res.status(400).json({ error: "All fields are required" });
   }
 
   try {
     const { lastID } = await dbRun(
-      "INSERT INTO assets (asset_code, name, type) VALUES (?, ?, ?)",
-      [asset_code.toUpperCase(), name, type]
+      "INSERT INTO assets (asset_code, name, type, assigned_to, location, comments) VALUES (?, ?, ?, ?, ?, ?)",
+      [asset_code.toUpperCase(), name, type, assigned_to, location, comments || null]
     );
-    res.json({ id: lastID, asset_code: asset_code.toUpperCase(), name, type });
+    res.json({ id: lastID, asset_code: asset_code.toUpperCase(), name, type, assigned_to, location, comments });
   } catch (err) {
     if (err.message.includes("UNIQUE constraint failed")) {
       return res.status(409).json({ error: "Asset code already exists" });
     }
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const updateAsset = async (req, res) => {
+  const { code } = req.params;
+  const { asset_code, name, type, assigned_to, location, comments } = req.body;
+
+  if (!asset_code || !name || !type || !assigned_to || !location) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  const newCode = asset_code.toUpperCase();
+  const oldCode = code.toUpperCase();
+
+  try {
+    if (newCode !== oldCode) {
+      await dbRun(
+        "UPDATE asset_relationships SET parent_asset_code = ? WHERE parent_asset_code = ?",
+        [newCode, oldCode]
+      );
+      await dbRun(
+        "UPDATE asset_relationships SET child_asset_code = ? WHERE child_asset_code = ?",
+        [newCode, oldCode]
+      );
+    }
+    const { changes } = await dbRun(
+      "UPDATE assets SET asset_code = ?, name = ?, type = ?, assigned_to = ?, location = ?, comments = ? WHERE asset_code = ?",
+      [newCode, name, type, assigned_to, location, comments || null, oldCode]
+    );
+    if (changes === 0) return res.status(404).json({ error: "Asset not found" });
+    res.json({ asset_code: newCode, name, type, assigned_to, location, comments });
+  } catch (err) {
+    if (err.message.includes("UNIQUE constraint failed")) {
+      return res.status(409).json({ error: "Asset code already exists" });
+    }
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const deleteAsset = async (req, res) => {
+  const { code } = req.params;
+
+  try {
+    await dbRun(
+      "DELETE FROM asset_relationships WHERE parent_asset_code = ? OR child_asset_code = ?",
+      [code.toUpperCase(), code.toUpperCase()]
+    );
+    const { changes } = await dbRun(
+      "DELETE FROM assets WHERE asset_code = ?",
+      [code.toUpperCase()]
+    );
+    if (changes === 0) return res.status(404).json({ error: "Asset not found" });
+    res.json({ message: "Asset deleted successfully" });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
@@ -66,4 +121,4 @@ const getAssetsForDropdown = async (req, res) => {
   }
 };
 
-module.exports = { getAllAssets, getAssetByCode, createAsset, getAssetsForDropdown };
+module.exports = { getAllAssets, getAssetByCode, createAsset, updateAsset, deleteAsset, getAssetsForDropdown };

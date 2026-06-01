@@ -34,6 +34,10 @@ function initializeDatabase() {
         console.error("Error creating assets table:", err.message);
       } else {
         console.log("Assets table ready");
+        // Add new columns to existing databases (safe to run every time — errors are ignored)
+        db.run(`ALTER TABLE assets ADD COLUMN assigned_to TEXT`, () => {});
+        db.run(`ALTER TABLE assets ADD COLUMN location TEXT`, () => {});
+        db.run(`ALTER TABLE assets ADD COLUMN comments TEXT`, () => {});
       }
     },
   );

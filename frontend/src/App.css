@@ -834,7 +834,10 @@
 }
 
 .asset-actions {
-  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
 }
 
 /* Empty states */
@@ -1108,15 +1111,67 @@
   color: var(--primary-color);
 }
 
+.col-code-link {
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.col-code-link:hover {
+  text-decoration: underline;
+  color: var(--secondary-color);
+}
+
 .asset-table .col-date {
   color: var(--gray-600);
   font-size: 0.88rem;
   white-space: nowrap;
 }
 
-.asset-table .col-action {
+.asset-table .col-actions {
   text-align: right;
   white-space: nowrap;
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.delete-confirm-text {
+  font-size: 0.85rem;
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+.editing-row {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.table-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1.5px solid var(--primary-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.9rem;
+  background: var(--white);
+  min-width: 80px;
+}
+
+.table-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.table-select {
+  padding: 5px 8px;
+  border: 1.5px solid var(--primary-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.9rem;
+  background: var(--white);
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
 }
 
 .asset-table .table-empty {
@@ -1124,4 +1179,92 @@
   color: var(--gray-500);
   padding: var(--spacing-xxl);
   font-style: italic;
+}
+
+.asset-table .col-muted {
+  color: var(--gray-700);
+}
+
+.col-empty {
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+/* ── Asset detail edit form ─────────────────────────── */
+.detail-edit-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: rgba(102, 126, 234, 0.04);
+  border: 1.5px solid rgba(102, 126, 234, 0.2);
+  border-radius: var(--border-radius-md);
+}
+
+.form-field-full {
+  width: 100%;
+}
+
+.form-field textarea {
+  padding: var(--spacing-md);
+  border: 2px solid var(--gray-300);
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  background: var(--white);
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.detail-edit-actions {
+  width: 100%;
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xs);
+}
+
+/* ── Asset comments display ─────────────────────────── */
+.detail-comments {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--gray-200);
+}
+
+.detail-comments strong {
+  display: block;
+  color: var(--gray-700);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.comments-text {
+  color: var(--gray-800);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Asset detail meta grid ─────────────────────────── */
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md) var(--spacing-xxl);
+  margin-top: var(--spacing-sm);
+}
+
+.detail-meta-item {
+  margin: 0;
+  color: var(--gray-600);
+  font-size: 0.95rem;
 }

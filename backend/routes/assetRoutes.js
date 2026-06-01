@@ -14,4 +14,10 @@ router.get('/:code', assetController.getAssetByCode);
 // POST /api/assets - Create new asset
 router.post('/', assetController.createAsset);
 
+// PUT /api/assets/:code - Update asset
+router.put('/:code', assetController.updateAsset);
+
+// DELETE /api/assets/:code - Delete asset and its relationships
+router.delete('/:code', assetController.deleteAsset);
+
 module.exports = router;

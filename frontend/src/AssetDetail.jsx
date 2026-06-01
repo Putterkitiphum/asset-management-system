@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 
 function AssetDetail() {
   const { user, logout } = useAuth();
   const { assetCode } = useParams();
+  const navigate = useNavigate();
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingAssets, setLoadingAssets] = useState(true);
@@ -14,6 +15,9 @@ function AssetDetail() {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [confirmRemove, setConfirmRemove] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValues, setEditValues] = useState({});
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef(null);
@@ -120,6 +124,45 @@ function AssetDetail() {
     fetchAssetDetails();
   };
 
+  const handleStartEdit = () => {
+    setEditValues({
+      asset_code: asset.asset_code,
+      name: asset.name,
+      type: asset.type,
+      assigned_to: asset.assigned_to || "",
+      location: asset.location || "",
+      comments: asset.comments || "",
+    });
+    setIsEditing(true);
+    setConfirmDelete(false);
+    setError("");
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const { data } = await axios.put(`/api/assets/${assetCode}`, editValues);
+      setIsEditing(false);
+      if (data.asset_code !== assetCode) {
+        navigate(`/asset/${data.asset_code}`);
+      } else {
+        setSuccessMsg("Asset updated successfully");
+        fetchAssetDetails();
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to update asset");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/api/assets/${assetCode}`);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to delete asset");
+      setConfirmDelete(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading">
@@ -209,16 +252,121 @@ function AssetDetail() {
             >
               ↻ Refresh
             </button>
+            {!isEditing && !confirmDelete && (
+              <button onClick={handleStartEdit} className="btn btn-primary btn-small">
+                Edit
+              </button>
+            )}
+            {!isEditing && (
+              confirmDelete ? (
+                <>
+                  <span className="delete-confirm-text">Delete?</span>
+                  <button onClick={handleDelete} className="btn btn-danger btn-small">Yes</button>
+                  <button onClick={() => setConfirmDelete(false)} className="btn btn-secondary btn-small">No</button>
+                </>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)} className="btn btn-danger btn-small">
+                  Delete
+                </button>
+              )
+            )}
           </div>
         </div>
 
         <div className="detail-content">
-          <h3>{asset.name}</h3>
-          <p className="created-date">
-            <strong>Created:</strong>{" "}
-            {new Date(asset.created_at).toLocaleDateString()} at{" "}
-            {new Date(asset.created_at).toLocaleTimeString()}
-          </p>
+          {isEditing ? (
+            <div className="detail-edit-form">
+              <div className="form-field">
+                <label>Asset Code</label>
+                <input
+                  type="text"
+                  value={editValues.asset_code}
+                  onChange={(e) => setEditValues({ ...editValues, asset_code: e.target.value.toUpperCase() })}
+                  required
+                />
+              </div>
+              <div className="form-field form-field-grow">
+                <label>Asset Name</label>
+                <input
+                  type="text"
+                  value={editValues.name}
+                  onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-field">
+                <label>Type</label>
+                <select
+                  value={editValues.type}
+                  onChange={(e) => setEditValues({ ...editValues, type: e.target.value })}
+                >
+                  <option value="laptop">Laptop</option>
+                  <option value="printer">Printer</option>
+                  <option value="license">License</option>
+                  <option value="monitor">Monitor</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="form-field form-field-grow">
+                <label>Assigned To</label>
+                <input
+                  type="text"
+                  value={editValues.assigned_to}
+                  onChange={(e) => setEditValues({ ...editValues, assigned_to: e.target.value })}
+                  placeholder="e.g., John Doe"
+                />
+              </div>
+              <div className="form-field form-field-grow">
+                <label>Location</label>
+                <input
+                  type="text"
+                  value={editValues.location}
+                  onChange={(e) => setEditValues({ ...editValues, location: e.target.value })}
+                  placeholder="e.g., Office 3B"
+                />
+              </div>
+              <div className="form-field form-field-full">
+                <label>Comments</label>
+                <textarea
+                  value={editValues.comments}
+                  onChange={(e) => setEditValues({ ...editValues, comments: e.target.value })}
+                  placeholder="Any notes or comments about this asset…"
+                  rows={3}
+                />
+              </div>
+              <div className="detail-edit-actions">
+                <button onClick={handleSaveEdit} className="btn btn-success">Save Changes</button>
+                <button onClick={() => setIsEditing(false)} className="btn btn-secondary">Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h3>{asset.name}</h3>
+              <div className="detail-meta">
+                <p className="detail-meta-item">
+                  <strong>Assigned To:</strong>{" "}
+                  <span>{asset.assigned_to || <span className="col-empty">Not assigned</span>}</span>
+                </p>
+                <p className="detail-meta-item">
+                  <strong>Location:</strong>{" "}
+                  <span>{asset.location || <span className="col-empty">Not set</span>}</span>
+                </p>
+                <p className="detail-meta-item">
+                  <strong>Created:</strong>{" "}
+                  {new Date(asset.created_at).toLocaleDateString()} at{" "}
+                  {new Date(asset.created_at).toLocaleTimeString()}
+                </p>
+              </div>
+              <div className="detail-comments">
+                <strong>Comments</strong>
+                {asset.comments ? (
+                  <p className="comments-text">{asset.comments}</p>
+                ) : (
+                  <p className="col-empty">No comments</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Parent Assets Section */}
