@@ -304,6 +304,7 @@ function AssetDetail() {
                   <option value="printer">Printer</option>
                   <option value="license">License</option>
                   <option value="monitor">Monitor</option>
+                  <option value="furniture">Furniture</option>
                   <option value="other">Other</option>
                 </select>
               </div>

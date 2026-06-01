@@ -17,6 +17,8 @@ function HomePage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const [searchTerm, setSearchTerm] = useState("");
+
   useEffect(() => {
     fetchAssets();
   }, []);
@@ -26,6 +28,8 @@ function HomePage() {
       "Asset Code": a.asset_code,
       Name: a.name,
       Type: a.type,
+      "Assigned To": a.assigned_to,
+      Location: a.location,
       "Created At": new Date(a.created_at).toLocaleString(),
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -65,6 +69,14 @@ function HomePage() {
       setErrorMsg(`Error creating asset: ${msg}`);
     }
   };
+
+  const filteredAssets = assets.filter(
+    (asset) =>
+      asset.asset_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.assigned_to?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.location?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="home-page">
@@ -142,6 +154,7 @@ function HomePage() {
                 <option value="printer">Printer</option>
                 <option value="license">License</option>
                 <option value="monitor">Monitor</option>
+                <option value="furniture">Furniture</option>
                 <option value="other">Other</option>
               </select>
             </div>
@@ -184,7 +197,7 @@ function HomePage() {
         {/* Asset List */}
         <div className="section section-wide">
           <div className="section-title-row">
-            <h2>All Assets ({assets.length})</h2>
+            <h2>All Assets ({filteredAssets.length})</h2>
             <button
               onClick={exportToExcel}
               disabled={assets.length === 0}
@@ -192,6 +205,19 @@ function HomePage() {
             >
               Export to Excel
             </button>
+          </div>
+          <div className="search-bar-wrapper">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              className="search-bar"
+              placeholder="Search by code, name, assigned to, or location…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button className="search-clear-btn" onClick={() => setSearchTerm("")}>×</button>
+            )}
           </div>
           <table className="asset-table">
             <thead>
@@ -206,48 +232,48 @@ function HomePage() {
               </tr>
             </thead>
             <tbody>
-              {assets.length === 0 ? (
+              {filteredAssets.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="table-empty">
                     No assets found
                   </td>
                 </tr>
               ) : (
-                assets.map((asset) => (
-                  <tr key={asset.id}>
-                    <td className="col-code">
-                      <Link
-                        to={`/asset/${asset.asset_code}`}
-                        className="col-code-link"
-                      >
-                        {asset.asset_code}
-                      </Link>
-                    </td>
-                    <td>{asset.name}</td>
-                    <td>
-                      <span className="asset-type">{asset.type}</span>
-                    </td>
-                    <td className="col-muted">
-                      {asset.assigned_to || (
-                        <span className="col-empty">—</span>
-                      )}
-                    </td>
-                    <td className="col-muted">
-                      {asset.location || <span className="col-empty">—</span>}
-                    </td>
-                    <td className="col-date">
-                      {new Date(asset.created_at).toLocaleString()}
-                    </td>
-                    <td className="col-actions">
-                      <Link
-                        to={`/asset/${asset.asset_code}`}
-                        className="btn btn-outline btn-small"
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))
+                filteredAssets.map((asset) => (
+                    <tr key={asset.id}>
+                      <td className="col-code">
+                        <Link
+                          to={`/asset/${asset.asset_code}`}
+                          className="col-code-link"
+                        >
+                          {asset.asset_code}
+                        </Link>
+                      </td>
+                      <td>{asset.name}</td>
+                      <td>
+                        <span className="asset-type">{asset.type}</span>
+                      </td>
+                      <td className="col-muted">
+                        {asset.assigned_to || (
+                          <span className="col-empty">—</span>
+                        )}
+                      </td>
+                      <td className="col-muted">
+                        {asset.location || <span className="col-empty">—</span>}
+                      </td>
+                      <td className="col-date">
+                        {new Date(asset.created_at).toLocaleString()}
+                      </td>
+                      <td className="col-actions">
+                        <Link
+                          to={`/asset/${asset.asset_code}`}
+                          className="btn btn-outline btn-small"
+                        >
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>
