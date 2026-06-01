@@ -74,7 +74,7 @@ function HomePage() {
       </header>
       <div className="container">
         {successMsg && (
-          <div className="success-alert">
+          <div className="success-alert full-width">
             <div className="success-content">{successMsg}</div>
             <button onClick={() => setSuccessMsg("")} className="btn-close">
               ×
@@ -82,7 +82,7 @@ function HomePage() {
           </div>
         )}
         {errorMsg && (
-          <div className="error-alert">
+          <div className="error-alert full-width">
             <div className="error-content">{errorMsg}</div>
             <button onClick={() => setErrorMsg("")} className="btn-close">
               ×
@@ -90,11 +90,11 @@ function HomePage() {
           </div>
         )}
         {/* Create Asset Form */}
-        <div className="section">
+        <div className="section section-wide">
           <h2>Create New Asset</h2>
-          <form onSubmit={handleCreateAsset} className="asset-form">
-            <div className="form-group">
-              <label>Asset Code:</label>
+          <form onSubmit={handleCreateAsset} className="asset-form-row">
+            <div className="form-field">
+              <label>Asset Code</label>
               <input
                 type="text"
                 value={newAsset.asset_code}
@@ -109,8 +109,8 @@ function HomePage() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Asset Name:</label>
+            <div className="form-field form-field-grow">
+              <label>Asset Name</label>
               <input
                 type="text"
                 value={newAsset.name}
@@ -122,8 +122,8 @@ function HomePage() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Type:</label>
+            <div className="form-field">
+              <label>Type</label>
               <select
                 value={newAsset.type}
                 onChange={(e) =>
@@ -138,12 +138,17 @@ function HomePage() {
               </select>
             </div>
 
-            <button type="submit">Create Asset</button>
+            <div className="form-field form-field-submit">
+              <label>&nbsp;</label>
+              <button type="submit" className="btn btn-primary">
+                + Create Asset
+              </button>
+            </div>
           </form>
         </div>
 
         {/* Asset List */}
-        <div className="section">
+        <div className="section section-wide">
           <div className="section-title-row">
             <h2>All Assets ({assets.length})</h2>
             <button
@@ -154,20 +159,38 @@ function HomePage() {
               Export to Excel
             </button>
           </div>
-          <div className="asset-list">
-            {assets.map((asset) => (
-              <Link
-                to={`/asset/${asset.asset_code}`}
-                key={asset.id}
-                className="asset-card"
-              >
-                <div className="asset-code">{asset.asset_code}</div>
-                <div className="asset-name">{asset.name}</div>
-                <div className="asset-type">{asset.type}</div>
-                <div className="view-details">View Details →</div>
-              </Link>
-            ))}
-          </div>
+          <table className="asset-table">
+            <thead>
+              <tr>
+                <th>Asset Code</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Created At</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {assets.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="table-empty">No assets found</td>
+                </tr>
+              ) : (
+                assets.map((asset) => (
+                  <tr key={asset.id}>
+                    <td className="col-code">{asset.asset_code}</td>
+                    <td>{asset.name}</td>
+                    <td><span className="asset-type">{asset.type}</span></td>
+                    <td className="col-date">{new Date(asset.created_at).toLocaleString()}</td>
+                    <td className="col-action">
+                      <Link to={`/asset/${asset.asset_code}`} className="btn btn-outline btn-small">
+                        View →
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

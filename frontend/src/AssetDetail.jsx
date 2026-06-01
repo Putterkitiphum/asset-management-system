@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
@@ -14,9 +14,22 @@ function AssetDetail() {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [confirmRemove, setConfirmRemove] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     fetchAllAssets();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -68,6 +81,7 @@ function AssetDetail() {
       await axios.post(`/api/assets/${assetCode}/parents/${selectedParent}`);
       await Promise.all([fetchAssetDetails(), fetchAllAssets()]);
       setSelectedParent("");
+      setSearchQuery("");
       setSuccessMsg(`Successfully added ${selectedParent} as parent of ${assetCode}`);
     } catch (error) {
       console.error("Error adding parent:", error);
@@ -275,39 +289,77 @@ function AssetDetail() {
           </div>
 
           <div className="add-parent-form">
-            <select
-              value={selectedParent}
-              onChange={(e) => {
-                setSelectedParent(e.target.value);
-                setError("");
-              }}
-              className="parent-select"
-              disabled={loadingAssets}
-            >
-              <option value="">
-                {loadingAssets
-                  ? "Loading assets..."
-                  : "-- Select a parent asset --"}
-              </option>
-              {!loadingAssets &&
-                allAssets
+            <div className="parent-search-wrapper" ref={searchRef}>
+              <input
+                type="text"
+                className={`parent-search-input${selectedParent ? " parent-search-selected" : ""}`}
+                placeholder={loadingAssets ? "Loading assets..." : "Search by code or name…"}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSelectedParent("");
+                  setShowDropdown(true);
+                  setError("");
+                }}
+                onFocus={() => setShowDropdown(true)}
+                disabled={loadingAssets}
+                autoComplete="off"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="search-clear-btn"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedParent("");
+                    setShowDropdown(false);
+                  }}
+                >
+                  ×
+                </button>
+              )}
+              {showDropdown && !loadingAssets && (() => {
+                const filtered = allAssets
                   .filter(
                     (a) =>
                       a.asset_code !== asset.asset_code &&
-                      !asset.parents.some(
-                        (p) => p.asset_code === a.asset_code
-                      )
+                      !asset.parents.some((p) => p.asset_code === a.asset_code)
                   )
-                  .map((assetOption) => (
-                    <option
-                      key={assetOption.asset_code}
-                      value={assetOption.asset_code}
-                    >
-                      {assetOption.asset_code} - {assetOption.name} (
-                      {assetOption.type})
-                    </option>
-                  ))}
-            </select>
+                  .filter(
+                    (a) =>
+                      searchQuery === "" ||
+                      a.asset_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      a.type.toLowerCase().includes(searchQuery.toLowerCase())
+                  );
+                return (
+                  <div className="parent-dropdown">
+                    {filtered.length === 0 ? (
+                      <div className="dropdown-empty">No assets match "{searchQuery}"</div>
+                    ) : (
+                      filtered.map((a) => (
+                        <div
+                          key={a.asset_code}
+                          className="dropdown-item"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setSelectedParent(a.asset_code);
+                            setSearchQuery(`${a.asset_code} — ${a.name}`);
+                            setShowDropdown(false);
+                            setError("");
+                          }}
+                        >
+                          <span className="dropdown-code">{a.asset_code}</span>
+                          <span className="dropdown-name">{a.name}</span>
+                          <span className="dropdown-type">{a.type}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
 
             <button
               onClick={handleAddParent}
@@ -317,21 +369,6 @@ function AssetDetail() {
               Add Parent
             </button>
           </div>
-
-          {selectedParent && !loadingAssets && (
-            <div className="selected-info">
-              <strong>Selected:</strong> {selectedParent} -{" "}
-              {allAssets.find((a) => a.asset_code === selectedParent)?.name ||
-                "Unknown asset"}
-            </div>
-          )}
-
-          {loadingAssets && (
-            <div className="loading-state">
-              <div className="spinner small"></div>
-              <span>Loading available assets...</span>
-            </div>
-          )}
         </div>
 
         {/* Child Assets Section */}

@@ -881,3 +881,247 @@
   background: var(--primary-color);
   color: var(--white);
 }
+
+/* ── Horizontal create-asset form ──────────────────── */
+.asset-form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 140px;
+}
+
+.form-field-grow {
+  flex: 1;
+}
+
+.form-field label {
+  font-weight: 600;
+  color: var(--gray-700);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.form-field input {
+  padding: var(--spacing-md);
+  border: 2px solid var(--gray-300);
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background: var(--white);
+  height: 44px;
+}
+
+.form-field select {
+  padding: var(--spacing-md) 2.5rem var(--spacing-md) var(--spacing-md);
+  border: 2px solid var(--gray-300);
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background-color: var(--white);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1em;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 44px;
+  cursor: pointer;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-field-submit .btn {
+  height: 44px;
+  white-space: nowrap;
+}
+
+/* ── Searchable parent combobox ─────────────────────── */
+.parent-search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.parent-search-input {
+  width: 100%;
+  padding: var(--spacing-md) 2.5rem var(--spacing-md) var(--spacing-md);
+  border: 2px solid var(--gray-300);
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  background: var(--white);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.parent-search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.parent-search-input.parent-search-selected {
+  border-color: var(--success-color);
+  background: #f0fff4;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--gray-500);
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 50%;
+}
+
+.search-clear-btn:hover {
+  color: var(--gray-800);
+  background: var(--gray-200);
+}
+
+.parent-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.dropdown-code {
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  color: var(--primary-color);
+  min-width: 90px;
+  font-size: 0.9rem;
+}
+
+.dropdown-name {
+  flex: 1;
+  color: var(--gray-800);
+  font-size: 0.95rem;
+}
+
+.dropdown-type {
+  background: var(--gray-200);
+  color: var(--gray-600);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.dropdown-empty {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--gray-500);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* ── Full-width grid helpers ────────────────────────── */
+.section-wide,
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* ── Asset table ────────────────────────────────────── */
+.asset-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.asset-table thead tr {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: var(--white);
+}
+
+.asset-table th {
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: left;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.asset-table td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--gray-200);
+  color: var(--gray-800);
+}
+
+.asset-table tbody tr:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.asset-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.asset-table .col-code {
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.asset-table .col-date {
+  color: var(--gray-600);
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.asset-table .col-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.asset-table .table-empty {
+  text-align: center;
+  color: var(--gray-500);
+  padding: var(--spacing-xxl);
+  font-style: italic;
+}
