@@ -1071,6 +1071,58 @@
   grid-column: 1 / -1;
 }
 
+/* ── Role badges ────────────────────────────────────── */
+.role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.role-admin {
+  background: rgba(102, 126, 234, 0.15);
+  color: var(--primary-color);
+}
+
+.role-viewer {
+  background: rgba(40, 167, 69, 0.12);
+  color: var(--success-color);
+}
+
+.btn-manage-users {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: var(--white);
+  backdrop-filter: blur(4px);
+}
+
+.btn-manage-users:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: var(--white);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.header-role-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.you-badge {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  font-weight: 400;
+}
+
 /* ── Asset search bar ──────────────────────────────── */
 .search-bar-wrapper {
   position: relative;

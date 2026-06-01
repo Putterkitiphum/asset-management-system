@@ -87,6 +87,10 @@ function HomePage() {
         </div>
         <div className="header-actions">
           <span className="header-user">👤 {user?.username}</span>
+          <span className="header-role-badge">{user?.role}</span>
+          {user?.role === "admin" && (
+            <Link to="/users" className="btn btn-manage-users btn-small">👥 Manage Users</Link>
+          )}
           <button onClick={logout} className="btn btn-secondary btn-small">
             Logout
           </button>
@@ -109,8 +113,8 @@ function HomePage() {
             </button>
           </div>
         )}
-        {/* Create Asset Form */}
-        <div className="section section-wide">
+        {/* Create Asset Form — admin only */}
+        {user?.role === "admin" && <div className="section section-wide">
           <h2>Create New Asset</h2>
           <form onSubmit={handleCreateAsset} className="asset-form-row">
             <div className="form-field">
@@ -192,7 +196,7 @@ function HomePage() {
               </button>
             </div>
           </form>
-        </div>
+        </div>}
 
         {/* Asset List */}
         <div className="section section-wide">

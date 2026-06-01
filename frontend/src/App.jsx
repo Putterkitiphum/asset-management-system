@@ -4,6 +4,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import HomePage from "./HomePage";
 import AssetDetail from "./AssetDetail";
 import LoginPage from "./LoginPage";
+import UserManagementPage from "./UserManagementPage";
 import "./App.css";
 
 function App() {
@@ -26,6 +27,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AssetDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <UserManagementPage />
                 </ProtectedRoute>
               }
             />

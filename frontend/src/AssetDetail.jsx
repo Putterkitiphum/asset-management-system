@@ -252,12 +252,12 @@ function AssetDetail() {
             >
               ↻ Refresh
             </button>
-            {!isEditing && !confirmDelete && (
+            {user?.role === "admin" && !isEditing && !confirmDelete && (
               <button onClick={handleStartEdit} className="btn btn-primary btn-small">
                 Edit
               </button>
             )}
-            {!isEditing && (
+            {user?.role === "admin" && !isEditing && (
               confirmDelete ? (
                 <>
                   <span className="delete-confirm-text">Delete?</span>
@@ -390,7 +390,7 @@ function AssetDetail() {
                       <span className="parent-type">{parent.type}</span>
                     </Link>
                   </div>
-                  {confirmRemove === parent.asset_code ? (
+                  {user?.role === "admin" && (confirmRemove === parent.asset_code ? (
                     <div className="confirm-remove">
                       <span>Remove {parent.asset_code}?</span>
                       <button
@@ -414,7 +414,7 @@ function AssetDetail() {
                     >
                       Remove
                     </button>
-                  )}
+                  ))}
                 </div>
               ))}
             </div>
@@ -428,8 +428,8 @@ function AssetDetail() {
           )}
         </div>
 
-        {/* Add Parent Form */}
-        <div className="add-parent-section">
+        {/* Add Parent Form — admin only */}
+        {user?.role === "admin" && <div className="add-parent-section">
           <div className="section-header">
             <h4>➕ Add Parent Asset</h4>
             <span className="section-help">
@@ -518,7 +518,7 @@ function AssetDetail() {
               Add Parent
             </button>
           </div>
-        </div>
+        </div>}
 
         {/* Child Assets Section */}
         <div className="relationship-section">
