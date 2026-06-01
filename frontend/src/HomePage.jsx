@@ -24,8 +24,8 @@ function HomePage() {
   const exportToExcel = () => {
     const rows = assets.map((a) => ({
       "Asset Code": a.asset_code,
-      "Name": a.name,
-      "Type": a.type,
+      Name: a.name,
+      Type: a.type,
       "Created At": new Date(a.created_at).toLocaleString(),
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -47,7 +47,13 @@ function HomePage() {
     e.preventDefault();
     try {
       await axios.post("/api/assets", newAsset);
-      setNewAsset({ asset_code: "", name: "", type: "laptop", assigned_to: "", location: "" });
+      setNewAsset({
+        asset_code: "",
+        name: "",
+        type: "laptop",
+        assigned_to: "",
+        location: "",
+      });
       fetchAssets();
       setErrorMsg("");
       setSuccessMsg("Asset created successfully!");
@@ -202,21 +208,43 @@ function HomePage() {
             <tbody>
               {assets.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="table-empty">No assets found</td>
+                  <td colSpan={7} className="table-empty">
+                    No assets found
+                  </td>
                 </tr>
               ) : (
                 assets.map((asset) => (
                   <tr key={asset.id}>
                     <td className="col-code">
-                      <Link to={`/asset/${asset.asset_code}`} className="col-code-link">{asset.asset_code}</Link>
+                      <Link
+                        to={`/asset/${asset.asset_code}`}
+                        className="col-code-link"
+                      >
+                        {asset.asset_code}
+                      </Link>
                     </td>
                     <td>{asset.name}</td>
-                    <td><span className="asset-type">{asset.type}</span></td>
-                    <td className="col-muted">{asset.assigned_to || <span className="col-empty">—</span>}</td>
-                    <td className="col-muted">{asset.location || <span className="col-empty">—</span>}</td>
-                    <td className="col-date">{new Date(asset.created_at).toLocaleString()}</td>
+                    <td>
+                      <span className="asset-type">{asset.type}</span>
+                    </td>
+                    <td className="col-muted">
+                      {asset.assigned_to || (
+                        <span className="col-empty">—</span>
+                      )}
+                    </td>
+                    <td className="col-muted">
+                      {asset.location || <span className="col-empty">—</span>}
+                    </td>
+                    <td className="col-date">
+                      {new Date(asset.created_at).toLocaleString()}
+                    </td>
                     <td className="col-actions">
-                      <Link to={`/asset/${asset.asset_code}`} className="btn btn-outline btn-small">View</Link>
+                      <Link
+                        to={`/asset/${asset.asset_code}`}
+                        className="btn btn-outline btn-small"
+                      >
+                        View
+                      </Link>
                     </td>
                   </tr>
                 ))
